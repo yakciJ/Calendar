@@ -1,7 +1,8 @@
 import sqlite3
 
 from PyQt5.QtWidgets import QWidget, QApplication, QListWidgetItem, QMessageBox,QMainWindow,QLabel,QTimeEdit
-from PyQt5.QtCore import QTime,Qt
+from PyQt5.QtCore import QTimer,Qt
+from PyQt5 import QtGui
 from PyQt5.uic import loadUi
 import sys
 
@@ -18,7 +19,7 @@ class RegisterWindow(QWidget):
         self.setWindowTitle("Đăng ký")
         self.setGeometry(550, 300, 500, 350)
         self.setFixedSize(500, 350)
-        
+        self.setWindowIcon(QtGui.QIcon('logo.png'))
         self.error_message = QLabel()
         self.error_message.setStyleSheet("color: red")
         self.loginWindow = LoginWindow()
@@ -141,7 +142,7 @@ class LoginWindow(QWidget):
         self.setWindowTitle("Đăng nhập")
         self.setGeometry(550, 300, 500, 350)
         self.setFixedSize(500, 400)
-
+        self.setWindowIcon(QtGui.QIcon('logo.png'))
         windowLayout = QVBoxLayout()
         frame = QFrame(self)
         frame.setStyleSheet("background-color: qlineargradient(y1: 0, y2 : 1, stop: 0 #74b9ff, stop: 1 #6c5ce7); border-radius: 10px;")
@@ -230,7 +231,7 @@ class Window(QMainWindow):
         self.setFixedSize(1020, 800)
         self.move(300, 0)
         self.setWindowTitle("SeTTime")
-
+        self.setWindowIcon(QtGui.QIcon('logo.png'))
         self.label = self.findChild(QLabel, "label")
 
         self.username = username
@@ -239,8 +240,12 @@ class Window(QMainWindow):
         self.calendarDateChanged()
         self.saveButton.clicked.connect(self.saveChanges)
         self.addButton.clicked.connect(self.addNewTask)
-
         self.Notification()
+        self.timer = QTimer(self)
+        self.timer.setSingleShot(False)
+        self.timer.setInterval(60000)
+        self.timer.timeout.connect(self.Notification)
+        self.timer.start()
 
     def calendarDateChanged(self):
         dateSelected = self.calendarWidget.selectedDate().toPyDate().strftime("%d-%m-%y")
@@ -284,8 +289,11 @@ class Window(QMainWindow):
         db.commit()
 
         messageBox = QMessageBox()
-        messageBox.setText("Changes saved.")
+        messageBox.setText("Thay đổi đã được lưu.")
+        messageBox.setWindowIcon(QtGui.QIcon('logo.png'))
         messageBox.setStandardButtons(QMessageBox.Ok)
+        messageBox.setIcon(QMessageBox.Information)
+        messageBox.setWindowTitle("Thông báo")
         messageBox.exec()
 
     def addNewTask(self):
@@ -312,20 +320,18 @@ class Window(QMainWindow):
         row = (self.username)
         results = cursor.execute(query, row).fetchall()
         for result in results:
-            if date==result[1] and time==result[2]:
-                self.NotificationWindow = NotificationWindow(result[0])
-                self.NotificationWindow.show()
-class NotificationWindow(QWidget):
-    def __init__(self):
-        self.setWindowTitle("Thông báo")
-        self.setGeometry(550,300,500,350)
-        self.setFixedSize(500,400)
-        windowLayout = QVBoxLayout()
-        frame = QFrame(self)
-        frame.setStyleSheet("background-color: qlineargradient(y1: 0, y2 : 1, stop: 0 #74b9ff, stop: 1 #6c5ce7); border-radius: 10px;")
-        windowLayout.addWidget(frame)
-        layout = QVBoxLayout(frame)
-        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+            if date==result[0] and time==result[1]:
+                # self.NotificationWindow = NotificationWindow(result[0])
+                # self.NotificationWindow.show()
+                msg = QMessageBox()
+                msg.setWindowTitle("Thông báo")
+                msg.setWindowIcon(QtGui.QIcon('logo.png'))
+                msg.setText(result[2])
+                msg.setFixedSize(500,500)
+                msg.setIcon(QMessageBox.Information)
+                x = msg.exec_()
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
